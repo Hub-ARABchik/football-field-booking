@@ -1,0 +1,62 @@
+@startuml
+title FFBS — Component Diagram
+skinparam componentStyle rectangle
+skinparam shadowing false
+
+package "Уровень клиентского интерфейса" {
+  [Веб-интерфейс клиента] as CustomerUI
+  [Панель владельца площадки] as OwnerUI
+  [Панель администратора] as AdminUI
+}
+
+package "Уровень приложения" {
+  [Маршрутизатор API] as API
+  [Аутентификация и авторизация] as IAM
+  [Модуль пользователей] as Users
+  [Модуль каталога площадок] as Fields
+  [Модуль доступности площадок] as Slots
+  [Модуль бронирования] as Bookings
+  [Модуль оплаты] as Payments
+  [Модуль уведомлений] as Notifications
+  [Модуль отзывов] as Reviews
+  [Модуль отчётности] as Reports
+}
+
+package "Инфраструктурный уровень" {
+  database "Реляционная база данных" as DB
+  [Хранилище файлов] as Storage
+  [Провайдер электронной почты / SMS] as Messaging
+  [Платёжный шлюз] as Gateway
+}
+
+CustomerUI --> API
+OwnerUI --> API
+AdminUI --> API
+
+API --> IAM
+API --> Users
+API --> Fields
+API --> Slots
+API --> Bookings
+API --> Payments
+API --> Notifications
+API --> Reviews
+API --> Reports
+
+IAM --> DB
+Users --> DB
+Fields --> DB
+Fields --> Storage
+Slots --> DB
+Bookings --> DB
+Payments --> DB
+Payments --> Gateway
+Notifications --> DB
+Notifications --> Messaging
+Reviews --> DB
+Reports --> DB
+
+Bookings --> Slots : проверка доступности
+Bookings --> Notifications : события бронирования
+Payments --> Notifications : события оплаты
+@enduml
