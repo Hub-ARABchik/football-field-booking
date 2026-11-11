@@ -1,0 +1,28 @@
+@startuml
+title FFBS — Booking State Machine
+skinparam shadowing false
+
+[*] --> PENDING : Клиент отправляет запрос на бронирование
+
+PENDING --> CONFIRMED : Владелец одобряет / автоматическое подтверждение
+PENDING --> REJECTED : Владелец отклоняет запрос
+PENDING --> CANCELLED : Клиент или владелец отменяет бронирование
+
+CONFIRMED --> CANCELLED : Отмена разрешена согласно правилам системы
+CONFIRMED --> COMPLETED : Время бронирования истекло / владелец завершает бронирование
+
+REJECTED --> [*]
+CANCELLED --> [*]
+COMPLETED --> [*]
+
+note right of PENDING
+  Временной интервал площадки резервируется
+  в соответствии с правилами обработки
+  ожидающих подтверждения бронирований.
+end note
+
+note right of CONFIRMED
+  Бронирование подтверждено.
+  Статус оплаты отслеживается отдельно.
+end note
+@enduml
