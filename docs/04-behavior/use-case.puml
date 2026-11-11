@@ -1,0 +1,95 @@
+@startuml use-case
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+title FFBS — Диаграмма вариантов использования
+
+actor "Гость" as Guest
+actor "Клиент\n(CUSTOMER)" as Customer
+actor "Владелец площадки\n(OWNER)" as Owner
+actor "Администратор\n(ADMIN)" as Admin
+
+rectangle "FFBS — Система бронирования футбольных площадок" {
+  usecase "Просмотр каталога\nплощадок" as UC01
+  usecase "Поиск и фильтрация\nплощадок" as UC02
+  usecase "Просмотр сведений\nо площадке" as UC03
+  usecase "Просмотр расписания\nи доступности" as UC04
+  usecase "Регистрация" as UC05
+  usecase "Вход в систему" as UC06
+
+  usecase "Создание\nбронирования" as UC07
+  usecase "Проверка доступности\nвременного интервала" as UC08
+  usecase "Просмотр своих\nбронирований" as UC09
+  usecase "Отмена бронирования" as UC10
+  usecase "Оставление отзыва\nо завершённом бронировании" as UC11
+  usecase "Получение уведомлений" as UC12
+
+  usecase "Управление своими\nплощадками" as UC13
+  usecase "Управление расписанием\nплощадок" as UC14
+  usecase "Просмотр заявок\nна бронирование" as UC15
+  usecase "Подтверждение\nбронирования" as UC16
+  usecase "Отклонение\nбронирования" as UC17
+
+  usecase "Управление\nпользователями" as UC18
+  usecase "Модерация\nплощадок" as UC19
+  usecase "Просмотр статистики\nи отчётов" as UC20
+}
+
+' Гость
+Guest --> UC01
+Guest --> UC02
+Guest --> UC03
+Guest --> UC04
+Guest --> UC05
+Guest --> UC06
+
+' Клиент
+Customer --> UC01
+Customer --> UC02
+Customer --> UC03
+Customer --> UC04
+Customer --> UC06
+Customer --> UC07
+Customer --> UC09
+Customer --> UC10
+Customer --> UC11
+Customer --> UC12
+
+' Владелец площадки
+Owner --> UC06
+Owner --> UC13
+Owner --> UC14
+Owner --> UC15
+Owner --> UC16
+Owner --> UC17
+Owner --> UC12
+
+' Администратор
+Admin --> UC06
+Admin --> UC18
+Admin --> UC19
+Admin --> UC20
+
+' Включаемые сценарии
+UC07 ..> UC08 : <<include>>
+UC16 ..> UC15 : <<include>>
+UC17 ..> UC15 : <<include>>
+
+note bottom of UC07
+  Для одной площадки запрещены
+  пересекающиеся активные бронирования.
+  Активные статусы: PENDING и CONFIRMED.
+end note
+
+note bottom of UC13
+  Владелец может управлять
+  только собственными площадками.
+end note
+
+note bottom of UC18
+  Администратор имеет права
+  управления на уровне всей платформы.
+end note
+
+@enduml
