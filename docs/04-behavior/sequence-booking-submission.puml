@@ -1,0 +1,79 @@
+@startuml sequence-booking-submission
+title FFBS — Отправка запроса на бронирование
+
+actor "Клиент\n(CUSTOMER)" as Customer
+participant "Веб-клиент" as Browser
+participant "Промежуточный слой\nаутентификации" as Auth
+participant "Контроллер\nбронирования" as BookingController
+participant "Сервис проверки\nдоступности" as AvailabilityService
+database "База данных FFBS" as DB
+participant "Сервис\nуведомлений" as NotificationService
+
+Customer -> Browser : Выбирает площадку, дату и интервал
+Customer -> Browser : Нажимает «Забронировать»
+Browser -> Auth : POST /api/bookings\n(данные бронирования, токен)
+activate Auth
+
+Auth -> Auth : Проверка аутентификации\nи роли CUSTOMER
+
+alt Пользователь не авторизован
+  Auth --> Browser : 401 Unauthorized
+  Browser --> Customer : Предложение войти в систему
+else Пользователь авторизован
+  Auth -> BookingController : createBooking(bookingData, user)
+  activate BookingController
+
+  BookingController -> BookingController : Проверка обязательных полей\nи корректности временного интервала
+
+  alt Ошибка валидации
+    BookingController --> Browser : 422 Validation Error
+    Browser --> Customer : Отображение ошибок формы
+  else Данные корректны
+    BookingController -> DB : Проверка существования\nи публикации площадки
+    activate DB
+    DB --> BookingController : Результат проверки
+    deactivate DB
+
+    alt Площадка недоступна или не опубликована
+      BookingController --> Browser : 404 Not Found / 422 Validation Error
+      Browser --> Customer : Сообщение о недоступности площадки
+    else Площадка доступна для бронирования
+      BookingController -> AvailabilityService : checkAvailability(fieldId, startAt, endAt)
+      activate AvailabilityService
+
+      AvailabilityService -> DB : Начать транзакцию\nи проверить активные бронирования
+      activate DB
+      DB --> AvailabilityService : Результат проверки доступности
+      deactivate DB
+
+      alt Интервал пересекается с активным бронированием
+        AvailabilityService --> BookingController : unavailable
+        BookingController --> Browser : 409 Conflict
+        Browser --> Customer : Выбранное время уже занято
+      else Интервал свободен
+        AvailabilityService --> BookingController : available
+        deactivate AvailabilityService
+
+        BookingController -> DB : INSERT INTO bookings\n(customer_id, field_id, start_at, end_at,\ntotal_price, status)\nVALUES (..., 'PENDING')
+        activate DB
+        DB --> BookingController : ID созданного бронирования
+        deactivate DB
+
+        BookingController -> NotificationService : Уведомить владельца о новой заявке
+        activate NotificationService
+        NotificationService -> DB : Сохранить уведомление
+        DB --> NotificationService : Уведомление сохранено
+        NotificationService --> BookingController : Уведомление создано
+        deactivate NotificationService
+
+        BookingController --> Browser : 201 Created\n(booking, status=PENDING)
+        Browser --> Customer : Показать подтверждение отправки заявки
+      end
+    end
+  end
+
+  deactivate BookingController
+end
+
+deactivate Auth
+@enduml
