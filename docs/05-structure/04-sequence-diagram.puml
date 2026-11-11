@@ -1,1 +1,46 @@
 
+@startuml
+title FFBS — Sequence Diagram: Создание бронирования
+autonumber
+skinparam shadowing false
+
+actor "Клиент" as Customer
+boundary "Веб-клиент" as UI
+control "Промежуточный слой аутентификации" as Auth
+control "Контроллер бронирования" as Controller
+control "Сервис проверки доступности" as Availability
+database "База данных FFBS" as DB
+participant "Сервис уведомлений" as Notify
+
+Customer -> UI: Выбирает площадку, дату и время
+Customer -> UI: Отправляет запрос на бронирование
+UI -> Auth: POST /api/bookings + сессия/токен
+Auth -> Auth: Проверка личности и роли пользователя
+
+alt Пользователь не авторизован
+  Auth --> UI: 401 Unauthorized (Не авторизован)
+  UI --> Customer: Предложение войти в систему
+else Авторизованный клиент
+  Auth -> Controller: createBooking(customer, request)
+  Controller -> Controller: Проверка входных данных
+  Controller -> Availability: Проверка площадки и временного интервала
+  Availability -> DB: Получение данных площадки и активных бронирований
+  DB --> Availability: Данные площадки и бронирований
+  Availability -> Availability: Проверка пересечений и доступности
+
+  alt Площадка недействительна или время недоступно
+    Availability --> Controller: Конфликт / ошибка проверки данных
+    Controller --> UI: 409 Conflict или 422 Validation Error
+    UI --> Customer: Отображение ошибки и обновление расписания
+  else Временной интервал доступен
+    Controller -> DB: Начало транзакции
+    Controller -> DB: Повторная проверка интервала и создание бронирования PENDING
+    DB --> Controller: Бронирование успешно создано
+    Controller -> DB: Подтверждение транзакции
+    Controller -> Notify: Отправка уведомления о создании бронирования
+    Notify --> Customer: Уведомление о запросе на бронирование
+    Controller --> UI: 201 Created + данные бронирования
+    UI --> Customer: Отображение подтверждения / текущего статуса бронирования
+  end
+end
+@enduml
