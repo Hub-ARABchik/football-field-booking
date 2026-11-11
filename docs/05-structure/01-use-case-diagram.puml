@@ -1,0 +1,68 @@
+@startuml
+title FFBS — Use Case Diagram
+left to right direction
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+actor Guest
+actor Customer
+actor Owner
+actor Administrator as Admin
+
+rectangle "FFBS — Football Field Booking System" {
+  usecase "Register account" as UC_Register
+  usecase "Sign in / Sign out" as UC_Auth
+  usecase "Browse fields" as UC_Browse
+  usecase "Search and filter fields" as UC_Search
+  usecase "View field details" as UC_Details
+  usecase "View availability" as UC_Availability
+  usecase "Create booking" as UC_Create
+  usecase "Cancel booking" as UC_Cancel
+  usecase "View booking history" as UC_History
+  usecase "Manage profile" as UC_Profile
+  usecase "Manage owned fields" as UC_Fields
+  usecase "Create / edit field listing" as UC_EditField
+  usecase "Manage availability schedule" as UC_Schedule
+  usecase "Review booking requests" as UC_Requests
+  usecase "Manage users" as UC_Users
+  usecase "Moderate all field listings" as UC_Moderate
+  usecase "View platform statistics" as UC_Stats
+}
+
+Guest --> UC_Register
+Guest --> UC_Auth
+Guest --> UC_Browse
+Guest --> UC_Search
+Guest --> UC_Details
+
+Customer --> UC_Auth
+Customer --> UC_Browse
+Customer --> UC_Search
+Customer --> UC_Details
+Customer --> UC_Availability
+Customer --> UC_Create
+Customer --> UC_Cancel
+Customer --> UC_History
+Customer --> UC_Profile
+
+Owner --> UC_Register
+Owner --> UC_Auth
+Owner --> UC_Profile
+Owner --> UC_Fields
+Owner --> UC_EditField
+Owner --> UC_Schedule
+Owner --> UC_Requests
+
+Admin --> UC_Auth
+Admin --> UC_Users
+Admin --> UC_Moderate
+Admin --> UC_Stats
+
+UC_Create ..> UC_Availability : <<include>>
+UC_EditField ..> UC_Fields : <<extend>>
+
+note bottom of UC_Create
+  The server validates the selected slot
+  and prevents overlapping active bookings.
+end note
+@enduml
