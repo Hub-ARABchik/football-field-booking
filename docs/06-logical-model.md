@@ -1,93 +1,93 @@
-# 06 — Logical Database Model: FFBS
+# 06 — Логическая модель базы данных: FFBS
 
-**Project:** FFBS — Football Field Booking System  
-**Purpose:** Define the logical relational database model, entity relationships, primary and foreign keys, cardinalities, integrity constraints, and normalization through Third Normal Form (3NF).
-
----
-
-## 1. Purpose and scope
-
-### 1.1. Objective
-
-The objective of this stage is to transform the FFBS domain model into a logical relational model. The design identifies tables, columns, primary keys (PK), foreign keys (FK), unique constraints, relationship cardinalities, and normalization rules.
-
-### 1.2. System overview
-
-FFBS is a web application for finding and booking football fields. Customers browse fields, inspect their details, choose a time interval, and submit booking requests. Owners manage only their own field listings and schedules. Administrators manage platform-wide users and listings.
-
-The proposed logical model contains these core entities:
-
-- users and their platform roles;
-- football fields and their photos;
-- recurring availability schedules;
-- bookings and their lifecycle statuses;
-- payment transactions;
-- customer reviews;
-- user notifications.
-
-### 1.3. From UML class model to relational model
-
-The design has three levels:
-
-1. **Conceptual level:** UML class model from the structure-design stage. It describes domain concepts and their relationships.
-2. **Logical level:** relational model described in this document. It defines tables, attributes, PK/FK relationships, cardinalities, and normalization independently of a specific DBMS.
-3. **Physical level:** SQL DDL for the selected DBMS, including exact data types, indexes, storage engine, and implementation-specific constraints.
-
-Mapping rules:
-
-- Entity/class → relational table (for example, `User` → `users`).
-- Attribute → column.
-- Object/instance → row.
-- Entity identity → primary key, represented here by a surrogate `id`.
-- One-to-many (1:N) relationship → foreign key on the many side.
-- Many-to-many (M:N) relationship → junction table. In this model, a separate junction table is not required for the core booking flow because each booking links one customer to one field and one time interval.
-- One-to-one (1:1) relationship → foreign key with a `UNIQUE` constraint where applicable.
+**Проект:** FFBS — Football Field Booking System (система бронирования футбольных площадок)  
+**Назначение:** Определение логической реляционной модели базы данных, связей между сущностями, первичных и внешних ключей, кардинальности связей, ограничений целостности и нормализации до третьей нормальной формы (3NF).
 
 ---
 
-## 2. Initial unnormalized table (UNF)
+## 1. Назначение и область применения
 
-Before a structured database is introduced, booking information might be kept in a spreadsheet where customer, field, owner, booking, and payment details are placed in a single row.
+### 1.1. Цель
 
-The following sample `booking_flat` table uses fictional data.
+Цель данного этапа — преобразовать предметную модель FFBS в логическую реляционную модель. Проектирование определяет таблицы, столбцы, первичные ключи (PK), внешние ключи (FK), ограничения уникальности, кардинальность связей и правила нормализации.
 
-### Table 2.1. Initial unnormalized booking table
+### 1.2. Обзор системы
 
-| Booking ID | Customer details | Field and owner details | Booking interval and status | Payment details |
+FFBS — это веб-приложение для поиска и бронирования футбольных площадок. Клиенты просматривают площадки, изучают информацию о них, выбирают временной интервал и отправляют запросы на бронирование. Владельцы управляют только собственными объявлениями о площадках и расписаниями. Администраторы управляют пользователями и объявлениями на уровне всей платформы.
+
+Предлагаемая логическая модель содержит следующие основные сущности:
+
+- пользователи и их роли на платформе;
+- футбольные площадки и их фотографии;
+- повторяющиеся расписания доступности;
+- бронирования и их статусы жизненного цикла;
+- платёжные транзакции;
+- отзывы клиентов;
+- уведомления пользователей.
+
+### 1.3. Переход от UML-модели классов к реляционной модели
+
+Проектирование включает три уровня:
+
+1. **Концептуальный уровень:** UML-модель классов, созданная на этапе проектирования структуры. Она описывает понятия предметной области и связи между ними.
+2. **Логический уровень:** реляционная модель, описанная в этом документе. Она определяет таблицы, атрибуты, связи PK/FK, кардинальность и нормализацию независимо от конкретной СУБД.
+3. **Физический уровень:** SQL DDL для выбранной СУБД, включая точные типы данных, индексы, механизм хранения и ограничения, специфичные для реализации.
+
+Правила преобразования:
+
+- Сущность/класс → реляционная таблица (например, `User` → `users`).
+- Атрибут → столбец.
+- Объект/экземпляр → строка.
+- Идентификатор сущности → первичный ключ, в данной модели представленный суррогатным ключом `id`.
+- Связь «один ко многим» (1:N) → внешний ключ на стороне «многие».
+- Связь «многие ко многим» (M:N) → промежуточная таблица. В данной модели отдельная промежуточная таблица не требуется для основного процесса бронирования, поскольку каждое бронирование связывает одного клиента с одной площадкой и одним временным интервалом.
+- Связь «один к одному» (1:1) → внешний ключ с ограничением `UNIQUE`, если это применимо.
+
+---
+
+## 2. Исходная ненормализованная таблица (UNF)
+
+До создания структурированной базы данных информация о бронированиях может храниться в электронной таблице, где сведения о клиенте, площадке, владельце, бронировании и оплате размещены в одной строке.
+
+В следующей таблице `booking_flat` используются вымышленные данные.
+
+### Таблица 2.1. Исходная ненормализованная таблица бронирований
+
+| ID бронирования | Данные клиента | Данные площадки и владельца | Временной интервал и статус бронирования | Данные об оплате |
 |---|---|---|---|---|
-| 5001 | Farhod Rahimov; farhod@example.tj; +992900111222 | Arena 1; Khujand; Owner: Karim Saidov; +992900333444 | 2026-11-15 18:00–19:00; CONFIRMED | 120 TJS; CARD; PAID; TX-1001 |
-| 5002 | Madina Nazarova; madina@example.tj; +992900555666 | Arena 1; Khujand; Owner: Karim Saidov; +992900333444 | 2026-11-15 19:00–20:00; PENDING | 120 TJS; CASH; PENDING |
-| 5003 | Farhod Rahimov; farhod@example.tj; +992900111222 | City Football; Khujand; Owner: Salim Niyozov; +992900777888 | 2026-11-16 17:00–18:30; COMPLETED | 180 TJS; CARD; PAID; TX-1002 |
+| 5001 | Farhod Rahimov; farhod@example.tj; +992900111222 | Arena 1; Khujand; Владелец: Karim Saidov; +992900333444 | 2026-11-15 18:00–19:00; CONFIRMED | 120 TJS; CARD; PAID; TX-1001 |
+| 5002 | Madina Nazarova; madina@example.tj; +992900555666 | Arena 1; Khujand; Владелец: Karim Saidov; +992900333444 | 2026-11-15 19:00–20:00; PENDING | 120 TJS; CASH; PENDING |
+| 5003 | Farhod Rahimov; farhod@example.tj; +992900111222 | City Football; Khujand; Владелец: Salim Niyozov; +992900777888 | 2026-11-16 17:00–18:30; COMPLETED | 180 TJS; CARD; PAID; TX-1002 |
 
-### Problems in the UNF table
+### Проблемы таблицы UNF
 
-1. **Non-atomic values:** customer details, owner details, booking interval, and payment details are grouped into compound cells.
-2. **Repeated data:** the same customer, owner, and field information is repeated across bookings.
-3. **Update anomaly:** changing an owner's phone number requires updating every row containing that owner.
-4. **Insertion anomaly:** a new field or owner cannot be recorded naturally until a booking row exists.
-5. **Deletion anomaly:** deleting the only booking for a field may accidentally remove the only stored copy of that field's details.
+1. **Неатомарные значения:** данные клиента, владельца, временной интервал бронирования и данные об оплате объединены в составные ячейки.
+2. **Повторяющиеся данные:** сведения об одном и том же клиенте, владельце и площадке повторяются в разных бронированиях.
+3. **Аномалия обновления:** изменение номера телефона владельца требует обновления каждой строки, содержащей данные этого владельца.
+4. **Аномалия вставки:** новую площадку или владельца нельзя естественным образом зарегистрировать, пока не существует строка бронирования.
+5. **Аномалия удаления:** удаление единственного бронирования площадки может случайно привести к удалению единственной сохранённой копии сведений об этой площадке.
 
 ---
 
-## 3. Step-by-step normalization: 1NF to 3NF
+## 3. Пошаговая нормализация: от 1NF до 3NF
 
-### 3.1. First Normal Form (1NF)
+### 3.1. Первая нормальная форма (1NF)
 
-A table is in First Normal Form when:
+Таблица находится в первой нормальной форме, если:
 
-1. Every column contains one atomic value.
-2. There are no repeating groups or arrays stored in a single cell.
-3. Each row can be uniquely identified by a key.
+1. Каждый столбец содержит одно атомарное значение.
+2. В одной ячейке отсутствуют повторяющиеся группы или массивы данных.
+3. Каждая строка может быть однозначно идентифицирована с помощью ключа.
 
-#### Changes required for 1NF
+#### Изменения, необходимые для приведения к 1NF
 
-- Split customer name, email, and phone into separate columns.
-- Split field name, address, owner name, and owner phone into separate columns.
-- Split booking start and end into separate values.
-- Split payment amount, method, status, and transaction reference into separate columns.
-- Store one booking and one payment record per row in the flattened example.
+- Разделить имя клиента, электронную почту и телефон на отдельные столбцы.
+- Разделить название площадки, адрес, имя владельца и телефон владельца на отдельные столбцы.
+- Разделить время начала и окончания бронирования на отдельные значения.
+- Разделить сумму платежа, способ оплаты, статус и ссылку на транзакцию на отдельные столбцы.
+- В упрощённом примере хранить одну запись о бронировании и одну запись об оплате в каждой строке.
 
-### Table 3.1. Resulting 1NF relation: `booking_payment_1nf`
+### Таблица 3.1. Результирующее отношение 1NF: `booking_payment_1nf`
 
 | booking_id | payment_id | customer_name | customer_email | customer_phone | field_name | field_address | owner_name | owner_phone | start_at | end_at | booking_status | amount | payment_method | payment_status |
 |---:|---:|---|---|---|---|---|---|---|---|---|---|---:|---|---|
@@ -95,18 +95,18 @@ A table is in First Normal Form when:
 | 5002 | 9002 | Madina Nazarova | madina@example.tj | +992900555666 | Arena 1 | Khujand | Karim Saidov | +992900333444 | 2026-11-15 19:00 | 2026-11-15 20:00 | PENDING | 120 | CASH | PENDING |
 | 5003 | 9003 | Farhod Rahimov | farhod@example.tj | +992900111222 | City Football | Khujand | Salim Niyozov | +992900777888 | 2026-11-16 17:00 | 2026-11-16 18:30 | COMPLETED | 180 | CARD | PAID |
 
-For this illustrative relation, `(booking_id, payment_id)` is a composite candidate key. In a production design, a booking can have zero, one, or multiple payment attempts, so the final model uses independent surrogate primary keys and a foreign key from `payments` to `bookings`.
+Для этого иллюстративного отношения `(booking_id, payment_id)` является составным потенциальным ключом. В рабочей системе бронирование может иметь ноль, одну или несколько попыток оплаты, поэтому в итоговой модели используются независимые суррогатные первичные ключи, а таблица `payments` содержит внешний ключ, ссылающийся на `bookings`.
 
-**1NF result:** values are atomic, but customer, owner, and field attributes are still repeated. The relation is not yet fully normalized.
+**Результат 1NF:** значения являются атомарными, однако атрибуты клиента, владельца и площадки всё ещё повторяются. Отношение пока не является полностью нормализованным.
 
-### 3.2. Second Normal Form (2NF)
+### 3.2. Вторая нормальная форма (2NF)
 
-A relation is in Second Normal Form when:
+Отношение находится во второй нормальной форме, если:
 
-1. It is already in 1NF.
-2. Every non-key attribute is fully functionally dependent on the whole candidate key, not only on part of a composite key.
+1. Оно уже находится в 1NF.
+2. Каждый неключевой атрибут полностью функционально зависит от всего потенциального ключа, а не только от его части.
 
-For the illustrative composite key `(booking_id, payment_id)`, the relevant dependencies include:
+Для иллюстративного составного ключа `(booking_id, payment_id)` соответствующие зависимости включают:
 
 - `booking_id → customer_id, field_id, start_at, end_at, booking_status`
 - `payment_id → booking_id, amount, payment_method, payment_status`
@@ -114,47 +114,47 @@ For the illustrative composite key `(booking_id, payment_id)`, the relevant depe
 - `field_id → field_name, field_address, owner_id`
 - `owner_id → owner_name, owner_phone`
 
-Customer and field details describe independent entities rather than the booking-payment pair. Payment details depend on the payment identifier. These facts should be stored separately.
+Сведения о клиенте и площадке описывают самостоятельные сущности, а не пару «бронирование — платёж». Данные об оплате зависят от идентификатора платежа. Поэтому эти сведения следует хранить отдельно.
 
-#### Solution
+#### Решение
 
-Separate the data into entity-focused relations:
+Разделить данные на отношения, ориентированные на отдельные сущности:
 
-1. `users` — customer and owner account information.
-2. `fields` — football field information and its owner reference.
-3. `bookings` — customer, field, interval, and booking status.
-4. `payments` — payment attempts belonging to a booking.
+1. `users` — информация об учётных записях клиентов и владельцев.
+2. `fields` — информация о футбольных площадках и ссылка на их владельцев.
+3. `bookings` — клиент, площадка, временной интервал и статус бронирования.
+4. `payments` — попытки оплаты, относящиеся к бронированию.
 
-The decomposition removes the main partial/repeated dependencies from the flattened relation. Transitive dependencies are reviewed in the next stage.
+Такое разложение устраняет основные частичные и повторяющиеся зависимости в исходном плоском отношении. Транзитивные зависимости рассматриваются на следующем этапе.
 
-### 3.3. Third Normal Form (3NF)
+### 3.3. Третья нормальная форма (3NF)
 
-A relation is in Third Normal Form when:
+Отношение находится в третьей нормальной форме, если:
 
-1. It is already in 2NF.
-2. No non-key attribute depends transitively on a candidate key through another non-key attribute.
+1. Оно уже находится в 2NF.
+2. Ни один неключевой атрибут не зависит транзитивно от потенциального ключа через другой неключевой атрибут.
 
-#### Transitive dependencies to avoid
+#### Транзитивные зависимости, которых следует избегать
 
-If `fields` stored the owner's name and phone directly, the dependency would be:
+Если бы таблица `fields` непосредственно хранила имя и телефон владельца, возникла бы следующая зависимость:
 
 `field_id → owner_id → owner_name, owner_phone`
 
-Owner information belongs to `users`, not to each field row. Therefore `fields` stores only `owner_id` as a foreign key.
+Информация о владельце должна храниться в таблице `users`, а не в каждой строке площадки. Поэтому таблица `fields` хранит только `owner_id` в качестве внешнего ключа.
 
-Likewise, if a booking row stored the customer's name and email, the dependency would be:
+Аналогично, если бы строка бронирования содержала имя и электронную почту клиента, возникла бы зависимость:
 
 `booking_id → customer_id → customer_name, customer_email`
 
-Customer information belongs to `users`; `bookings` stores only `customer_id`.
+Информация о клиенте должна храниться в таблице `users`; таблица `bookings` хранит только `customer_id`.
 
-#### Anomalies prevented by the 3NF design
+#### Аномалии, предотвращаемые проектированием в 3NF
 
-1. **Insertion anomaly:** an owner can register before creating a field; a field can be created before it receives a booking.
-2. **Update anomaly:** changing a user's phone number requires updating one `users` row rather than every booking or field row.
-3. **Deletion anomaly:** deleting a booking does not delete the customer, owner, or field records.
+1. **Аномалия вставки:** владелец может зарегистрироваться до создания площадки; площадку можно создать до появления первого бронирования.
+2. **Аномалия обновления:** при изменении номера телефона пользователя достаточно обновить одну строку в `users`, а не каждую строку бронирования или площадки.
+3. **Аномалия удаления:** удаление бронирования не приводит к удалению записей о клиенте, владельце или площадке.
 
-#### Final normalized relations
+#### Итоговые нормализованные отношения
 
 - `users` (`id`, `name`, `email`, `phone`, `password_hash`, `role`, ...)
 - `fields` (`id`, `owner_id`, `name`, `address`, `capacity`, `hourly_price`, `status`, ...)
@@ -165,205 +165,205 @@ Customer information belongs to `users`; `bookings` stores only `customer_id`.
 - `reviews` (`id`, `booking_id`, `customer_id`, `field_id`, `rating`, `comment`, ...)
 - `notifications` (`id`, `user_id`, `booking_id`, `title`, `message`, `is_read`, ...)
 
-The final relations keep descriptive facts with the entity they describe and use foreign keys to represent relationships.
+Итоговые отношения хранят описательные данные вместе с сущностью, которую они характеризуют, а для представления связей используют внешние ключи.
 
 ---
 
-## 4. Detailed description of the final tables
+## 4. Подробное описание итоговых таблиц
 
-The proposed logical model contains **8 core tables**.
+Предлагаемая логическая модель содержит **8 основных таблиц**.
 
-### 4.1. `users` — Users
+### 4.1. `users` — Пользователи
 
-Stores customer, field-owner, and administrator accounts.
+Хранит учётные записи клиентов, владельцев площадок и администраторов.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Unique user identifier |
-| `name` | VARCHAR(255) | — | No | Full name |
-| `email` | VARCHAR(255) | UQ | No | Unique login email |
-| `phone` | VARCHAR(30) | — | Yes | Contact phone |
-| `password_hash` | VARCHAR(255) | — | No | Hashed password |
-| `role` | VARCHAR(20) | — | No | `CUSTOMER`, `OWNER`, or `ADMIN` |
-| `is_active` | BOOLEAN | — | No | Account active flag |
-| `created_at` | TIMESTAMP | — | Yes | Account creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Уникальный идентификатор пользователя |
+| `name` | VARCHAR(255) | — | Нет | Полное имя |
+| `email` | VARCHAR(255) | UQ | Нет | Уникальный адрес электронной почты для входа |
+| `phone` | VARCHAR(30) | — | Да | Контактный телефон |
+| `password_hash` | VARCHAR(255) | — | Нет | Хешированный пароль |
+| `role` | VARCHAR(20) | — | Нет | `CUSTOMER`, `OWNER` или `ADMIN` |
+| `is_active` | BOOLEAN | — | Нет | Признак активности учётной записи |
+| `created_at` | TIMESTAMP | — | Да | Время создания учётной записи |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего обновления |
 
-### 4.2. `fields` — Football fields
+### 4.2. `fields` — Футбольные площадки
 
-Stores field listings managed by owners.
+Хранит объявления о площадках, которыми управляют владельцы.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Unique field identifier |
-| `owner_id` | BIGINT UNSIGNED | FK → users.id | No | Field owner |
-| `name` | VARCHAR(255) | — | No | Field name |
-| `description` | TEXT | — | Yes | Field description |
-| `address` | VARCHAR(500) | — | No | Physical address |
-| `city` | VARCHAR(100) | — | No | City |
-| `capacity` | SMALLINT UNSIGNED | — | No | Maximum player capacity |
-| `hourly_price` | DECIMAL(10,2) | — | No | Price per hour |
-| `status` | VARCHAR(20) | — | No | `DRAFT`, `PUBLISHED`, `INACTIVE`, `REJECTED` |
-| `created_at` | TIMESTAMP | — | Yes | Creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Уникальный идентификатор площадки |
+| `owner_id` | BIGINT UNSIGNED | FK → users.id | Нет | Владелец площадки |
+| `name` | VARCHAR(255) | — | Нет | Название площадки |
+| `description` | TEXT | — | Да | Описание площадки |
+| `address` | VARCHAR(500) | — | Нет | Физический адрес |
+| `city` | VARCHAR(100) | — | Нет | Город |
+| `capacity` | SMALLINT UNSIGNED | — | Нет | Максимальная вместимость игроков |
+| `hourly_price` | DECIMAL(10,2) | — | Нет | Цена за один час |
+| `status` | VARCHAR(20) | — | Нет | `DRAFT`, `PUBLISHED`, `INACTIVE`, `REJECTED` |
+| `created_at` | TIMESTAMP | — | Да | Время создания |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего обновления |
 
-### 4.3. `field_images` — Field photos
+### 4.3. `field_images` — Фотографии площадок
 
-Stores image paths separately because one field can have multiple photos.
+Хранит пути к изображениям отдельно, поскольку у одной площадки может быть несколько фотографий.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Image identifier |
-| `field_id` | BIGINT UNSIGNED | FK → fields.id | No | Related field |
-| `image_path` | VARCHAR(500) | — | No | Stored file path |
-| `sort_order` | SMALLINT UNSIGNED | — | No | Display order |
-| `created_at` | TIMESTAMP | — | Yes | Upload time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор изображения |
+| `field_id` | BIGINT UNSIGNED | FK → fields.id | Нет | Связанная площадка |
+| `image_path` | VARCHAR(500) | — | Нет | Путь к сохранённому файлу |
+| `sort_order` | SMALLINT UNSIGNED | — | Нет | Порядок отображения |
+| `created_at` | TIMESTAMP | — | Да | Время загрузки |
 
-### 4.4. `field_schedules` — Field availability schedules
+### 4.4. `field_schedules` — Расписания доступности площадок
 
-Stores recurring weekly opening intervals. Actual date-specific booking conflicts are checked against `bookings`.
+Хранит повторяющиеся еженедельные интервалы работы. Конфликты бронирований на конкретные даты проверяются по таблице `bookings`.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Schedule identifier |
-| `field_id` | BIGINT UNSIGNED | FK → fields.id | No | Related field |
-| `day_of_week` | TINYINT UNSIGNED | — | No | Day of week, 1–7 |
-| `start_time` | TIME | — | No | Opening time |
-| `end_time` | TIME | — | No | Closing time |
-| `is_active` | BOOLEAN | — | No | Schedule active flag |
-| `created_at` | TIMESTAMP | — | Yes | Creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор расписания |
+| `field_id` | BIGINT UNSIGNED | FK → fields.id | Нет | Связанная площадка |
+| `day_of_week` | TINYINT UNSIGNED | — | Нет | День недели, 1–7 |
+| `start_time` | TIME | — | Нет | Время открытия |
+| `end_time` | TIME | — | Нет | Время закрытия |
+| `is_active` | BOOLEAN | — | Нет | Признак активности расписания |
+| `created_at` | TIMESTAMP | — | Да | Время создания |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего обновления |
 
-### 4.5. `bookings` — Bookings
+### 4.5. `bookings` — Бронирования
 
-Stores booking requests and their lifecycle.
+Хранит запросы на бронирование и этапы их жизненного цикла.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Booking identifier |
-| `customer_id` | BIGINT UNSIGNED | FK → users.id | No | Customer who created booking |
-| `field_id` | BIGINT UNSIGNED | FK → fields.id | No | Booked field |
-| `start_at` | DATETIME | — | No | Booking start |
-| `end_at` | DATETIME | — | No | Booking end |
-| `total_price` | DECIMAL(10,2) | — | No | Calculated booking price |
-| `status` | VARCHAR(20) | — | No | `PENDING`, `CONFIRMED`, `CANCELLED`, `REJECTED`, `COMPLETED` |
-| `customer_note` | TEXT | — | Yes | Optional customer note |
-| `created_at` | TIMESTAMP | — | Yes | Booking creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last status/update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор бронирования |
+| `customer_id` | BIGINT UNSIGNED | FK → users.id | Нет | Клиент, создавший бронирование |
+| `field_id` | BIGINT UNSIGNED | FK → fields.id | Нет | Забронированная площадка |
+| `start_at` | DATETIME | — | Нет | Начало бронирования |
+| `end_at` | DATETIME | — | Нет | Окончание бронирования |
+| `total_price` | DECIMAL(10,2) | — | Нет | Рассчитанная стоимость бронирования |
+| `status` | VARCHAR(20) | — | Нет | `PENDING`, `CONFIRMED`, `CANCELLED`, `REJECTED`, `COMPLETED` |
+| `customer_note` | TEXT | — | Да | Необязательное примечание клиента |
+| `created_at` | TIMESTAMP | — | Да | Время создания бронирования |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего изменения статуса/записи |
 
-### 4.6. `payments` — Payments
+### 4.6. `payments` — Платежи
 
-Stores payment transactions and attempts. A booking may have no payment record, one payment, or multiple attempts depending on the payment workflow.
+Хранит платёжные транзакции и попытки оплаты. В зависимости от процесса оплаты бронирование может не иметь платёжных записей, иметь одну запись или несколько попыток оплаты.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Payment identifier |
-| `booking_id` | BIGINT UNSIGNED | FK → bookings.id | No | Related booking |
-| `amount` | DECIMAL(10,2) | — | No | Payment amount |
-| `method` | VARCHAR(20) | — | No | `CASH`, `CARD`, `ONLINE`, etc. |
-| `status` | VARCHAR(20) | — | No | `PENDING`, `PAID`, `FAILED`, `REFUNDED` |
-| `provider_reference` | VARCHAR(255) | UQ | Yes | External provider transaction reference |
-| `paid_at` | DATETIME | — | Yes | Successful payment time |
-| `created_at` | TIMESTAMP | — | Yes | Payment attempt creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор платежа |
+| `booking_id` | BIGINT UNSIGNED | FK → bookings.id | Нет | Связанное бронирование |
+| `amount` | DECIMAL(10,2) | — | Нет | Сумма платежа |
+| `method` | VARCHAR(20) | — | Нет | `CASH`, `CARD`, `ONLINE` и т. д. |
+| `status` | VARCHAR(20) | — | Нет | `PENDING`, `PAID`, `FAILED`, `REFUNDED` |
+| `provider_reference` | VARCHAR(255) | UQ | Да | Внешний идентификатор транзакции платёжного провайдера |
+| `paid_at` | DATETIME | — | Да | Время успешной оплаты |
+| `created_at` | TIMESTAMP | — | Да | Время создания попытки оплаты |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего обновления |
 
-### 4.7. `reviews` — Reviews
+### 4.7. `reviews` — Отзывы
 
-Stores customer feedback for completed bookings.
+Хранит отзывы клиентов о завершённых бронированиях.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Review identifier |
-| `booking_id` | BIGINT UNSIGNED | FK → bookings.id, UQ | No | Reviewed booking; one review per booking |
-| `customer_id` | BIGINT UNSIGNED | FK → users.id | No | Review author |
-| `field_id` | BIGINT UNSIGNED | FK → fields.id | No | Reviewed field |
-| `rating` | TINYINT UNSIGNED | — | No | Rating from 1 to 5 |
-| `comment` | TEXT | — | Yes | Written feedback |
-| `created_at` | TIMESTAMP | — | Yes | Review creation time |
-| `updated_at` | TIMESTAMP | — | Yes | Last update time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор отзыва |
+| `booking_id` | BIGINT UNSIGNED | FK → bookings.id, UQ | Нет | Оцениваемое бронирование; один отзыв на бронирование |
+| `customer_id` | BIGINT UNSIGNED | FK → users.id | Нет | Автор отзыва |
+| `field_id` | BIGINT UNSIGNED | FK → fields.id | Нет | Оцениваемая площадка |
+| `rating` | TINYINT UNSIGNED | — | Нет | Оценка от 1 до 5 |
+| `comment` | TEXT | — | Да | Текстовый отзыв |
+| `created_at` | TIMESTAMP | — | Да | Время создания отзыва |
+| `updated_at` | TIMESTAMP | — | Да | Время последнего обновления |
 
-The application must verify that the booking belongs to the customer, is completed, and references the same field before accepting a review.
+Перед принятием отзыва приложение должно проверить, что бронирование принадлежит данному клиенту, имеет статус завершённого и относится к той же площадке.
 
-### 4.8. `notifications` — Notifications
+### 4.8. `notifications` — Уведомления
 
-Stores notifications delivered to users.
+Хранит уведомления, отправленные пользователям.
 
-| Attribute | Suggested type | Key | NULL | Description |
+| Атрибут | Предлагаемый тип | Ключ | NULL | Описание |
 |---|---|---|---|---|
-| `id` | BIGINT UNSIGNED | PK | No | Notification identifier |
-| `user_id` | BIGINT UNSIGNED | FK → users.id | No | Recipient |
-| `booking_id` | BIGINT UNSIGNED | FK → bookings.id | Yes | Related booking, if applicable |
-| `title` | VARCHAR(255) | — | No | Notification title |
-| `message` | TEXT | — | No | Notification content |
-| `is_read` | BOOLEAN | — | No | Read flag |
-| `created_at` | TIMESTAMP | — | Yes | Creation time |
+| `id` | BIGINT UNSIGNED | PK | Нет | Идентификатор уведомления |
+| `user_id` | BIGINT UNSIGNED | FK → users.id | Нет | Получатель |
+| `booking_id` | BIGINT UNSIGNED | FK → bookings.id | Да | Связанное бронирование, если применимо |
+| `title` | VARCHAR(255) | — | Нет | Заголовок уведомления |
+| `message` | TEXT | — | Нет | Содержимое уведомления |
+| `is_read` | BOOLEAN | — | Нет | Признак прочтения |
+| `created_at` | TIMESTAMP | — | Да | Время создания |
 
 ---
 
-## 5. Summary of entities
+## 5. Сводная информация о сущностях
 
-| Table | Purpose | Primary and foreign keys |
+| Таблица | Назначение | Первичные и внешние ключи |
 |---|---|---|
-| `users` | Customer, owner, and administrator accounts | PK: `id`; UQ: `email` |
-| `fields` | Football field listings | PK: `id`; FK: `owner_id → users.id` |
-| `field_images` | Multiple photos for each field | PK: `id`; FK: `field_id → fields.id` |
-| `field_schedules` | Weekly availability intervals | PK: `id`; FK: `field_id → fields.id` |
-| `bookings` | Customer reservations and statuses | PK: `id`; FK: `customer_id → users.id`, `field_id → fields.id` |
-| `payments` | Payment attempts and results | PK: `id`; FK: `booking_id → bookings.id` |
-| `reviews` | Customer feedback | PK: `id`; UQ: `booking_id`; FKs to bookings, users, and fields |
-| `notifications` | User notifications | PK: `id`; FKs to users and optionally bookings |
+| `users` | Учётные записи клиентов, владельцев и администраторов | PK: `id`; UQ: `email` |
+| `fields` | Объявления о футбольных площадках | PK: `id`; FK: `owner_id → users.id` |
+| `field_images` | Несколько фотографий каждой площадки | PK: `id`; FK: `field_id → fields.id` |
+| `field_schedules` | Еженедельные интервалы доступности | PK: `id`; FK: `field_id → fields.id` |
+| `bookings` | Бронирования клиентов и их статусы | PK: `id`; FK: `customer_id → users.id`, `field_id → fields.id` |
+| `payments` | Попытки оплаты и их результаты | PK: `id`; FK: `booking_id → bookings.id` |
+| `reviews` | Отзывы клиентов | PK: `id`; UQ: `booking_id`; FK к `bookings`, `users` и `fields` |
+| `notifications` | Уведомления пользователей | PK: `id`; FK к `users` и, при необходимости, к `bookings` |
 
 ---
 
-## 6. Relationships and cardinality
+## 6. Связи и кардинальность
 
-### 6.1. Relationship list
+### 6.1. Перечень связей
 
-| Related tables | Relationship | Foreign key | Explanation |
+| Связанные таблицы | Связь | Внешний ключ | Пояснение |
 |---|---|---|---|
-| `users` — `fields` | 1:N | `fields.owner_id` | One owner can manage multiple fields |
-| `fields` — `field_images` | 1:N | `field_images.field_id` | One field can have multiple photos |
-| `fields` — `field_schedules` | 1:N | `field_schedules.field_id` | One field can have multiple weekly schedule intervals |
-| `users` — `bookings` | 1:N | `bookings.customer_id` | One customer can create multiple bookings |
-| `fields` — `bookings` | 1:N | `bookings.field_id` | One field can receive multiple bookings over time |
-| `bookings` — `payments` | 1:N | `payments.booking_id` | One booking can have multiple payment attempts |
-| `bookings` — `reviews` | 1:0..1 | `reviews.booking_id` | A booking can have at most one review |
-| `users` — `reviews` | 1:N | `reviews.customer_id` | One customer can write multiple reviews |
-| `fields` — `reviews` | 1:N | `reviews.field_id` | One field can receive multiple reviews |
-| `users` — `notifications` | 1:N | `notifications.user_id` | One user can receive multiple notifications |
-| `bookings` — `notifications` | 1:N optional | `notifications.booking_id` | A booking can be referenced by multiple notifications |
+| `users` — `fields` | 1:N | `fields.owner_id` | Один владелец может управлять несколькими площадками |
+| `fields` — `field_images` | 1:N | `field_images.field_id` | У одной площадки может быть несколько фотографий |
+| `fields` — `field_schedules` | 1:N | `field_schedules.field_id` | У одной площадки может быть несколько еженедельных интервалов расписания |
+| `users` — `bookings` | 1:N | `bookings.customer_id` | Один клиент может создать несколько бронирований |
+| `fields` — `bookings` | 1:N | `bookings.field_id` | Одна площадка может получать множество бронирований в разное время |
+| `bookings` — `payments` | 1:N | `payments.booking_id` | Одно бронирование может иметь несколько попыток оплаты |
+| `bookings` — `reviews` | 1:0..1 | `reviews.booking_id` | Для одного бронирования может существовать не более одного отзыва |
+| `users` — `reviews` | 1:N | `reviews.customer_id` | Один клиент может оставить несколько отзывов |
+| `fields` — `reviews` | 1:N | `reviews.field_id` | Одна площадка может получить несколько отзывов |
+| `users` — `notifications` | 1:N | `notifications.user_id` | Один пользователь может получать несколько уведомлений |
+| `bookings` — `notifications` | 1:N, необязательная | `notifications.booking_id` | На одно бронирование могут ссылаться несколько уведомлений |
 
-### 6.2. Booking relationship
+### 6.2. Связь бронирования
 
-A booking links one customer to one field for a specific interval. A customer can create many bookings, and a field can have many bookings at different times.
+Бронирование связывает одного клиента с одной площадкой на определённый временной интервал. Один клиент может создавать множество бронирований, а у одной площадки может быть множество бронирований в разное время.
 
-The database foreign keys guarantee that the customer and field exist. The application and transactional database logic must additionally ensure that the time interval is valid and does not overlap another active booking for the same field.
+Внешние ключи базы данных гарантируют, что клиент и площадка существуют. Приложение и транзакционная логика базы данных должны дополнительно обеспечивать корректность временного интервала и отсутствие его пересечения с другим активным бронированием той же площадки.
 
-### 6.3. Why `field_images` and `field_schedules` are separate
+### 6.3. Почему `field_images` и `field_schedules` вынесены в отдельные таблицы
 
-A field may have several images and several weekly availability intervals. Storing these as comma-separated values or repeated columns in `fields` would violate 1NF. Separate child tables preserve atomic values and allow independent additions, updates, and deletions.
+У одной площадки может быть несколько изображений и несколько еженедельных интервалов доступности. Хранение этих данных в виде значений, разделённых запятыми, или повторяющихся столбцов в таблице `fields` нарушило бы 1NF. Отдельные дочерние таблицы сохраняют атомарность значений и позволяют независимо добавлять, обновлять и удалять записи.
 
-### 6.4. Optional one-to-one review relationship
+### 6.4. Необязательная связь «один к одному» для отзывов
 
-`reviews.booking_id` has a `UNIQUE` constraint. This means one booking can have zero or one review. Every review must reference exactly one booking.
+Для `reviews.booking_id` установлено ограничение `UNIQUE`. Это означает, что для одного бронирования может существовать ноль или один отзыв. Каждый отзыв обязательно должен ссылаться ровно на одно бронирование.
 
 ---
 
-## 7. Data integrity constraints
+## 7. Ограничения целостности данных
 
-### 7.1. Unique constraints
+### 7.1. Ограничения уникальности
 
-Recommended uniqueness rules:
+Рекомендуемые правила уникальности:
 
-1. `users.email` — prevents duplicate accounts with the same email.
-2. `reviews.booking_id` — limits each booking to one review.
-3. `payments.provider_reference` — unique when a provider reference is present.
-4. `field_schedules(field_id, day_of_week, start_time, end_time)` — prevents exact duplicate schedule intervals.
-5. Additional application-specific uniqueness may be added for external identifiers.
+1. `users.email` — предотвращает создание нескольких учётных записей с одним адресом электронной почты.
+2. `reviews.booking_id` — ограничивает каждое бронирование одним отзывом.
+3. `payments.provider_reference` — уникален, если внешний идентификатор платёжного провайдера указан.
+4. `field_schedules(field_id, day_of_week, start_time, end_time)` — предотвращает создание полностью совпадающих интервалов расписания.
+5. Для внешних идентификаторов могут быть добавлены дополнительные ограничения уникальности, специфичные для приложения.
 
-### 7.2. Check constraints
+### 7.2. Ограничения CHECK
 
-Recommended logical checks:
+Рекомендуемые логические проверки:
 
 ```sql
 CHECK (capacity > 0)
@@ -375,78 +375,78 @@ CHECK (end_time > start_time)
 CHECK (day_of_week BETWEEN 1 AND 7)
 ```
 
-Actual support and enforcement depend on the selected DBMS and version.
+Фактическая поддержка и применение этих ограничений зависят от выбранной СУБД и её версии.
 
-### 7.3. Preventing overlapping active bookings
+### 7.3. Предотвращение пересечения активных бронирований
 
-The following booking statuses are considered active for conflict checking:
+Следующие статусы бронирования считаются активными при проверке конфликтов:
 
 - `PENDING`
 - `CONFIRMED`
 
-Two intervals overlap when:
+Два временных интервала пересекаются, если выполняется условие:
 
 `new_start < existing_end AND new_end > existing_start`
 
-The server must perform the conflict check inside a transaction and use an appropriate locking or serialization strategy. A simple pre-check outside a transaction is not sufficient because two simultaneous requests could both pass the check.
+Сервер должен выполнять проверку конфликтов внутри транзакции и использовать подходящую стратегию блокировки или сериализации. Простая предварительная проверка вне транзакции недостаточна, поскольку два одновременных запроса могут успешно пройти проверку.
 
-The database implementation should also define how long a `PENDING` booking blocks a time interval and how expired pending requests are released.
+В реализации базы данных также необходимо определить, как долго бронирование со статусом `PENDING` блокирует временной интервал и каким образом освобождаются интервалы просроченных ожидающих запросов.
 
-### 7.4. Foreign-key deletion rules
+### 7.4. Правила удаления для внешних ключей
 
-| Foreign key | Recommended rule | Reason |
+| Внешний ключ | Рекомендуемое правило | Причина |
 |---|---|---|
-| `fields.owner_id → users.id` | RESTRICT | Prevent deleting an owner while their fields exist; use account deactivation instead |
-| `field_images.field_id → fields.id` | CASCADE | Images belong to the field |
-| `field_schedules.field_id → fields.id` | CASCADE | Schedules belong to the field |
-| `bookings.customer_id → users.id` | RESTRICT | Preserve booking history |
-| `bookings.field_id → fields.id` | RESTRICT | Preserve booking history |
-| `payments.booking_id → bookings.id` | RESTRICT | Preserve financial records |
-| `reviews.booking_id → bookings.id` | RESTRICT | Preserve review integrity |
-| `reviews.customer_id → users.id` | RESTRICT | Preserve review authorship |
-| `reviews.field_id → fields.id` | RESTRICT | Preserve reviewed field reference |
-| `notifications.user_id → users.id` | CASCADE or RESTRICT | Choose according to notification-retention policy |
-| `notifications.booking_id → bookings.id` | SET NULL or CASCADE | Choose whether notifications must remain after booking deletion |
+| `fields.owner_id → users.id` | RESTRICT | Запретить удаление владельца, пока существуют его площадки; вместо этого использовать деактивацию учётной записи |
+| `field_images.field_id → fields.id` | CASCADE | Фотографии принадлежат площадке |
+| `field_schedules.field_id → fields.id` | CASCADE | Расписания принадлежат площадке |
+| `bookings.customer_id → users.id` | RESTRICT | Сохранить историю бронирований |
+| `bookings.field_id → fields.id` | RESTRICT | Сохранить историю бронирований |
+| `payments.booking_id → bookings.id` | RESTRICT | Сохранить финансовые записи |
+| `reviews.booking_id → bookings.id` | RESTRICT | Сохранить целостность отзывов |
+| `reviews.customer_id → users.id` | RESTRICT | Сохранить сведения об авторстве отзыва |
+| `reviews.field_id → fields.id` | RESTRICT | Сохранить ссылку на оцениваемую площадку |
+| `notifications.user_id → users.id` | CASCADE или RESTRICT | Выбор зависит от политики хранения уведомлений |
+| `notifications.booking_id → bookings.id` | SET NULL или CASCADE | Выбор зависит от того, должны ли уведомления сохраняться после удаления бронирования |
 
-For production systems, soft deletion or account deactivation is generally safer than physically deleting users, fields, and booking history.
+Для производственных систем программное удаление (soft delete) или деактивация учётной записи обычно безопаснее, чем физическое удаление пользователей, площадок и истории бронирований.
 
-### 7.5. Database-level and application-level validation
+### 7.5. Проверка данных на уровне базы данных и приложения
 
-- **Database level:** primary keys, foreign keys, unique constraints, check constraints, and transactions protect stored data even when requests originate outside the web interface.
-- **Application level:** request validation, authorization policies, ownership checks, booking rules, review eligibility, and user-friendly error messages prevent invalid operations before they reach the database.
+- **Уровень базы данных:** первичные ключи, внешние ключи, ограничения уникальности, ограничения `CHECK` и транзакции защищают сохранённые данные даже в том случае, если запросы поступают не через веб-интерфейс.
+- **Уровень приложения:** проверка запросов, политики авторизации, проверка принадлежности объектов владельцам, правила бронирования, право на оставление отзыва и понятные пользователю сообщения об ошибках предотвращают некорректные операции ещё до их передачи в базу данных.
 
-Both levels are necessary and complement each other.
+Оба уровня необходимы и дополняют друг друга.
 
 ---
 
-## 8. Consistency with the UML class model
+## 8. Соответствие UML-модели классов
 
-The logical model maps the principal FFBS domain classes to relational tables:
+Логическая модель сопоставляет основные классы предметной области FFBS с реляционными таблицами:
 
-| UML class | Relational table | Mapping |
+| Класс UML | Реляционная таблица | Соответствие |
 |---|---|---|
-| `User` | `users` | Account, role, and contact data |
-| `Field` | `fields` | Field listing and owner FK |
-| `FieldImage` | `field_images` | One-to-many field images |
-| `AvailabilitySlot` / schedule | `field_schedules` | Recurring weekly availability |
-| `Booking` | `bookings` | Customer, field, interval, and status |
-| `Payment` | `payments` | Payment attempts and status |
-| `Review` | `reviews` | Review linked to a completed booking |
-| `Notification` | `notifications` | Notification recipient and optional booking reference |
+| `User` | `users` | Данные учётной записи, роли и контактная информация |
+| `Field` | `fields` | Объявление о площадке и внешний ключ владельца |
+| `FieldImage` | `field_images` | Связь «один ко многим» для изображений площадки |
+| `AvailabilitySlot` / schedule | `field_schedules` | Повторяющееся еженедельное расписание доступности |
+| `Booking` | `bookings` | Клиент, площадка, временной интервал и статус |
+| `Payment` | `payments` | Попытки оплаты и их статусы |
+| `Review` | `reviews` | Отзыв, связанный с завершённым бронированием |
+| `Notification` | `notifications` | Получатель уведомления и необязательная ссылка на бронирование |
 
-**Modeling note:** the earlier UML concept `AvailabilitySlot` is represented here as a recurring `field_schedules` table. If the implementation instead creates concrete date-specific slots, replace or extend this table with a date-specific availability entity. Do not mix recurring weekly hours and actual booking instances in one ambiguous table.
+**Примечание по моделированию:** ранее использовавшаяся в UML концепция `AvailabilitySlot` представлена здесь таблицей повторяющегося расписания `field_schedules`. Если реализация вместо этого создаёт конкретные временные интервалы для отдельных дат, следует заменить или расширить эту таблицу сущностью доступности, привязанной к конкретной дате. Не следует объединять повторяющиеся еженедельные часы работы и фактические экземпляры бронирований в одной неоднозначной таблице.
 
 ---
 
-## 9. Conclusion
+## 9. Заключение
 
-The FFBS logical database model defines eight core relational tables and their relationships. The design:
+Логическая модель базы данных FFBS определяет восемь основных реляционных таблиц и связи между ними. Проектирование:
 
-1. Identifies the initial data-redundancy problems in a flattened booking table.
-2. Demonstrates the normalization process from 1NF through 2NF to 3NF.
-3. Separates user, field, schedule, booking, payment, review, image, and notification data.
-4. Defines primary keys, foreign keys, unique constraints, and relationship cardinalities.
-5. Establishes integrity rules for booking intervals and overlapping active reservations.
-6. Provides a foundation for the next stage: physical database design and SQL DDL implementation.
+1. Выявляет первоначальные проблемы избыточности данных в единой плоской таблице бронирований.
+2. Демонстрирует процесс нормализации от 1NF через 2NF до 3NF.
+3. Разделяет данные пользователей, площадок, расписаний, бронирований, платежей, отзывов, изображений и уведомлений.
+4. Определяет первичные и внешние ключи, ограничения уникальности и кардинальность связей.
+5. Устанавливает правила целостности для временных интервалов бронирования и пересечения активных бронирований.
+6. Создаёт основу для следующего этапа: физического проектирования базы данных и реализации SQL DDL.
 
-The model is a proposed logical design. Before implementation, confirm the exact booking approval workflow, payment policy, schedule model, cancellation policy, and DBMS-specific enforcement strategy.
+Эта модель является предлагаемым логическим проектированием. Перед реализацией необходимо подтвердить точный процесс подтверждения бронирований, политику оплаты, модель расписания, правила отмены и стратегию обеспечения ограничений, специфичную для выбранной СУБД.
