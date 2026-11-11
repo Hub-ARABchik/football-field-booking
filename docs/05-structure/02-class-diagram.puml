@@ -1,0 +1,147 @@
+@startuml
+title FFBS — Class Diagram
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+
+enum UserRole {
+  CUSTOMER
+  OWNER
+  ADMIN
+}
+
+enum FieldStatus {
+  DRAFT
+  PUBLISHED
+  INACTIVE
+  REJECTED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  REJECTED
+  COMPLETED
+}
+
+enum PaymentStatus {
+  NOT_REQUIRED
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+}
+
+class User {
+  +id: UUID
+  +name: String
+  +email: String
+  +phone: String
+  -passwordHash: String
+  +role: UserRole
+  +isActive: Boolean
+  +createdAt: DateTime
+  +updateProfile()
+  +changePassword()
+}
+
+class Field {
+  +id: UUID
+  +ownerId: UUID
+  +name: String
+  +description: Text
+  +address: String
+  +latitude: Decimal
+  +longitude: Decimal
+  +capacity: Integer
+  +hourlyPrice: Decimal
+  +status: FieldStatus
+  +createdAt: DateTime
+  +publish()
+  +updateDetails()
+  +deactivate()
+}
+
+class AvailabilitySlot {
+  +id: UUID
+  +fieldId: UUID
+  +startAt: DateTime
+  +endAt: DateTime
+  +isAvailable: Boolean
+  +priceOverride: Decimal
+  +validateInterval()
+}
+
+class Booking {
+  +id: UUID
+  +customerId: UUID
+  +fieldId: UUID
+  +startAt: DateTime
+  +endAt: DateTime
+  +totalPrice: Decimal
+  +status: BookingStatus
+  +createdAt: DateTime
+  +confirm()
+  +cancel()
+  +reject()
+  +complete()
+}
+
+class Payment {
+  +id: UUID
+  +bookingId: UUID
+  +amount: Decimal
+  +status: PaymentStatus
+  +providerReference: String
+  +paidAt: DateTime
+  +markPaid()
+  +markFailed()
+  +refund()
+}
+
+class Review {
+  +id: UUID
+  +bookingId: UUID
+  +customerId: UUID
+  +fieldId: UUID
+  +rating: Integer
+  +comment: Text
+  +createdAt: DateTime
+  +edit()
+}
+
+class Notification {
+  +id: UUID
+  +userId: UUID
+  +bookingId: UUID
+  +title: String
+  +message: Text
+  +isRead: Boolean
+  +createdAt: DateTime
+  +markAsRead()
+}
+
+User "1" -- "0..*" Field : owns >
+User "1" -- "0..*" Booking : creates >
+Field "1" -- "0..*" AvailabilitySlot : offers >
+Field "1" -- "0..*" Booking : receives >
+Booking "1" -- "0..1" Payment : has >
+Booking "1" -- "0..1" Review : may receive >
+User "1" -- "0..*" Review : writes >
+Field "1" -- "0..*" Review : receives >
+User "1" -- "0..*" Notification : receives >
+Booking "0..1" -- "0..*" Notification : relates to >
+
+note right of Booking
+  Активные статусы бронирования:
+  PENDING (Ожидает подтверждения) и CONFIRMED (Подтверждено).
+  Пересекающиеся по времени активные бронирования
+  для одной площадки запрещены.
+end note
+
+note bottom of User
+  Роль пользователя определяет уровень доступа.
+  Владельцы могут управлять только своими площадками.
+  Администраторы имеют права доступа ко всей системе.
+end note
+@enduml
