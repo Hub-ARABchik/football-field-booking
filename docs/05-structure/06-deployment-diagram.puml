@@ -1,0 +1,44 @@
+@startuml
+title FFBS — Deployment Diagram
+skinparam shadowing false
+
+node "Устройство пользователя" as Device {
+  artifact "Веб-браузер" as Browser
+}
+
+cloud "Интернет" as Internet
+
+node "Сервер приложения" as AppServer {
+  artifact "Веб-приложение FFBS" as App
+  artifact "REST API" as API
+}
+
+node "Сервер базы данных" as DatabaseServer {
+  database "Реляционная база данных FFBS" as DB
+}
+
+node "Сервер файлового хранилища" as FileServer {
+  artifact "Фотографии площадок и загруженные файлы" as Files
+}
+
+cloud "Внешние сервисы" as External {
+  node "Платёжный провайдер" as Payment
+  node "Провайдер электронной почты / SMS" as Messaging
+}
+
+Browser --> Internet : HTTPS
+Internet --> AppServer : HTTPS
+App --> API : Внутренние вызовы
+API --> DatabaseServer : SQL через частную сеть
+API --> FileServer : Операции с файлами
+API --> Payment : HTTPS API
+API --> Messaging : HTTPS API
+
+note bottom of AppServer
+  При развёртывании в производственной среде
+  необходимо использовать TLS,
+  секретные ключи через переменные окружения,
+  механизмы контроля доступа,
+  ведение журналов и резервное копирование.
+end note
+@enduml
