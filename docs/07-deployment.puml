@@ -1,0 +1,87 @@
+@startuml 07-deployment
+title FFBS — Диаграмма развертывания (Deployment Diagram)
+
+skinparam shadowing false
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
+node "Устройство пользователя" as ClientDevice {
+  artifact "Веб-браузер" as Browser
+  artifact "Веб-интерфейс FFBS" as WebUI
+}
+
+cloud "Интернет" as Internet
+
+node "Сервер приложения" as AppServer {
+  artifact "Веб-приложение FFBS" as Application
+  component "REST API" as API
+  component "Аутентификация\nи авторизация" as Auth
+  component "Модуль бронирования" as Booking
+  component "Сервис проверки\nдоступности" as Availability
+  component "Сервис уведомлений" as Notifications
+}
+
+node "Сервер базы данных" as DBServer {
+  database "Реляционная база данных FFBS" as Database {
+    folder "Основные таблицы" {
+      artifact "users"
+      artifact "fields"
+      artifact "field_images"
+      artifact "field_schedules"
+      artifact "bookings"
+      artifact "payments"
+      artifact "reviews"
+      artifact "notifications"
+    }
+  }
+}
+
+node "Сервер файлового хранилища" as FileServer {
+  folder "Загруженные файлы" as StoredFiles {
+    artifact "Фотографии футбольных площадок"
+  }
+}
+
+cloud "Внешние сервисы" as ExternalServices {
+  node "Платёжный провайдер" as PaymentProvider
+  node "Провайдер Email / SMS" as MessageProvider
+}
+
+Browser --> WebUI : HTTPS
+WebUI --> Internet : HTTPS
+Internet --> API : HTTPS / REST API
+
+API --> Auth : Проверка доступа
+API --> Booking : Запросы бронирования
+Booking --> Availability : Проверка временного интервала
+Availability --> Database : SQL / транзакция
+Booking --> Database : SQL
+API --> Database : SQL
+API --> StoredFiles : Загрузка и получение изображений
+Notifications --> Database : SQL
+Notifications --> MessageProvider : HTTPS API
+Booking --> PaymentProvider : HTTPS API
+
+note right of AppServer
+  Серверная часть обрабатывает
+  бизнес-логику и проверяет права доступа.
+
+  Проверка пересечения активных бронирований
+  выполняется на сервере внутри транзакции.
+end note
+
+note bottom of DBServer
+  Активные статусы бронирования:
+  PENDING и CONFIRMED.
+
+  Для одной площадки запрещены
+  пересекающиеся активные интервалы.
+end note
+
+note bottom of ExternalServices
+  Интеграции с платёжным провайдером
+  и сервисом Email / SMS являются
+  внешними зависимостями системы.
+end note
+
+@enduml
