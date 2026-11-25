@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="tg" data-ffbs-base="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123d2b">
+  <meta name="description" content="Тафсилоти дархости бронкунии майдончаи футбол.">
+  <title>Бронкунӣ — FFBS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/app.css">
+  <link rel="stylesheet" href="../assets/css/static.css">
+</head>
+<body class="ffbs-app">
+  <a class="ffbs-skip-link" href="#main">Гузаштан ба мундариҷа</a>
+  <header class="ffbs-nav"><div class="ffbs-container ffbs-nav__inner">
+    <a class="ffbs-brand" href="index.html"><span class="ffbs-brand__mark">F</span><span>FFBS</span></a>
+    <nav class="ffbs-nav__links" aria-label="Менюи асосӣ"><a href="index.html">Асосӣ</a><a href="fields.html">Майдончаҳо</a><a href="field.html?id=1" aria-current="page">Ҷадвал</a></nav>
+    <div class="ffbs-nav__actions"><span class="ffbs-nav__lang">TJ</span><a class="ffbs-button ffbs-button--light" href="fields.html">Бозгашт ба каталог</a></div>
+  </div></header>
+  <main id="main" class="ffbs-container ffbs-page-main" data-static-booking-page>
+    <div class="ffbs-breadcrumb"><a href="index.html">Асосӣ</a><span aria-hidden="true">/</span><a href="fields.html">Майдончаҳо</a><span aria-hidden="true">/</span><span>Бронкунӣ</span></div>
+    <div class="ffbs-page-title"><div><span class="ffbs-kicker">ҚАДАМИ ОХИР</span><h1>Маълумоти бронкунӣ</h1><p>Маълумоти худро пур кунед ва тафсилоти интихобшударо санҷед.</p></div><span class="ffbs-step-indicator">ҚАДАМИ 2 АЗ 2</span></div>
+    <div class="ffbs-checkout-layout">
+      <section class="ffbs-panel">
+        <h2>Маълумоти муштарӣ</h2>
+        <form id="booking-form" class="ffbs-booking-form" data-static-booking-submit novalidate>
+          <label class="ffbs-form-field ffbs-form-field--full"><span class="ffbs-label">Ному насаб <b aria-hidden="true">*</b></span><input class="ffbs-input" name="full_name" type="text" required minlength="3" maxlength="120" autocomplete="name" placeholder="Ному насаби худро нависед"><small class="ffbs-error" data-error-for="full_name"></small></label>
+          <label class="ffbs-form-field ffbs-form-field--full"><span class="ffbs-label">Рақами телефон <b aria-hidden="true">*</b></span><input class="ffbs-input" name="phone" type="tel" required pattern="\+992[0-9\s()-]{9,14}" autocomplete="tel" placeholder="+992 90 123 45 67"><small class="ffbs-help">Формат: +992 XX XXX XX XX</small><small class="ffbs-error" data-error-for="phone"></small></label>
+          <label class="ffbs-form-field ffbs-form-field--full"><span class="ffbs-label">Усули пардохт</span><select class="ffbs-select" name="payment_method"><option value="cash">Нақдӣ дар майдонча</option><option value="transfer">Интиқоли пулӣ</option></select><small class="ffbs-help">Интихоби усул дар ин прототип маблағро қабул намекунад.</small></label>
+          <label class="ffbs-form-field ffbs-form-field--full"><span class="ffbs-label">Эзоҳ (ихтиёрӣ)</span><textarea class="ffbs-textarea" name="note" maxlength="500" placeholder="Маълумоти иловагӣ барои соҳиби майдонча"></textarea><small class="ffbs-error" data-error-for="note"></small></label>
+          <label class="ffbs-consent"><input type="checkbox" name="consent" required><span>Ман дурустии маълумоти воридкардаро тасдиқ мекунам.</span></label>
+          <small class="ffbs-error" data-error-for="consent"></small>
+          <div class="ffbs-alert ffbs-alert--warning" role="note">Ин шакл намоиши интерфейс аст. Ҳангоми фиристодан брон дар базаи маълумот сабт намешавад.</div>
+          <button class="ffbs-button ffbs-button--full" type="submit">Санҷидани шакл</button>
+          <div class="ffbs-alert ffbs-alert--success" id="booking-demo-result" role="status" hidden></div>
+        </form>
+      </section>
+      <aside class="ffbs-panel ffbs-order-summary">
+        <span class="ffbs-kicker">ХУЛОСАИ ИНТИХОБ</span><h2>Тафсилоти бозӣ</h2>
+        <div class="ffbs-summary-pitch"><span>⚽</span></div>
+        <dl class="ffbs-summary-list">
+          <div><dt>Майдонча</dt><dd id="summary-field">—</dd></div>
+          <div><dt>Сана</dt><dd id="summary-date">—</dd></div>
+          <div><dt>Вақт</dt><dd id="summary-time">—</dd></div>
+          <div><dt>Рақами майдонча</dt><dd id="summary-field-id">—</dd></div>
+        </dl>
+        <div class="ffbs-summary-total"><span>Нархи нишон додашуда</span><strong id="summary-price">—</strong></div>
+        <p class="ffbs-demo-note">Нархи ниҳоӣ ва дастрасии слот бояд дар сервер дубора санҷида шаванд.</p>
+        <a class="ffbs-text-link" id="back-to-field" href="field.html?id=1">← Тағйир додани вақт</a>
+      </aside>
+    </div>
+  </main>
+  <footer class="ffbs-footer"><div class="ffbs-container ffbs-footer__inner"><a class="ffbs-brand" href="index.html"><span class="ffbs-brand__mark">F</span><span>FFBS</span></a><p>Football Field Booking System · Хуҷанд, Тоҷикистон</p><span>© 2026 FFBS</span></div></footer>
+  <script src="../assets/js/static.js" defer></script>
+</body>
+</html>

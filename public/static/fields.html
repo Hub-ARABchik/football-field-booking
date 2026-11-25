@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="tg" data-ffbs-base="">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#123d2b">
+  <meta name="description" content="Каталоги майдончаҳои футбол дар Хуҷанд бо ҷустуҷӯ ва филтрҳо.">
+  <title>Каталог — FFBS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/app.css">
+  <link rel="stylesheet" href="../assets/css/static.css">
+</head>
+<body class="ffbs-app">
+  <a class="ffbs-skip-link" href="#main">Гузаштан ба мундариҷа</a>
+  <header class="ffbs-nav"><div class="ffbs-container ffbs-nav__inner">
+    <a class="ffbs-brand" href="index.html"><span class="ffbs-brand__mark">F</span><span>FFBS</span></a>
+    <nav class="ffbs-nav__links" aria-label="Менюи асосӣ"><a href="index.html">Асосӣ</a><a href="fields.html" aria-current="page">Майдончаҳо</a><a href="field.html?id=1">Ҷадвал</a></nav>
+    <div class="ffbs-nav__actions"><span class="ffbs-nav__lang">TJ</span><a class="ffbs-button ffbs-button--light" href="booking.html">Бронкунӣ</a></div>
+  </div></header>
+  <main id="main" class="ffbs-container ffbs-page-main">
+    <div class="ffbs-breadcrumb"><a href="index.html">Асосӣ</a><span aria-hidden="true">/</span><span>Майдончаҳо</span></div>
+    <div class="ffbs-page-title"><div><span class="ffbs-kicker">КАТАЛОГ</span><h1>Майдончаҳои футбол</h1><p>Майдони худро аз рӯйи андоза, рӯйпӯш ва нарх интихоб кунед.</p></div><span class="ffbs-counter" id="catalog-counter">Намунаҳои майдончаҳо</span></div>
+    <div class="ffbs-catalog-layout">
+      <aside class="ffbs-panel ffbs-filter-panel">
+        <div class="ffbs-filter-title"><h2>Филтрҳо</h2><button class="ffbs-link-button" type="reset" form="field-filters">Тоза кардан</button></div>
+        <form id="field-filters" data-static-search data-api-url="../api/fields/" data-results="#catalog-results" data-status="#catalog-status">
+          <label class="ffbs-filter-field"><span class="ffbs-label">Ҷустуҷӯ</span><input class="ffbs-input" type="search" name="q" placeholder="Ном ё тавсиф" autocomplete="off"></label>
+          <label class="ffbs-filter-field"><span class="ffbs-label">Андозаи майдон</span><select class="ffbs-select" name="size"><option value="">Ҳамаи андозаҳо</option><option value="5x5">5 × 5</option><option value="7x7">7 × 7</option><option value="11x11">11 × 11</option></select></label>
+          <label class="ffbs-filter-field"><span class="ffbs-label">Рӯйпӯш</span><select class="ffbs-select" name="surface"><option value="">Ҳама</option><option value="Алафи сунъӣ">Алафи сунъӣ</option><option value="Алафи табиӣ">Алафи табиӣ</option><option value="Паркет">Паркет</option><option value="Резина">Резина</option></select></label>
+          <div class="ffbs-filter-price"><span class="ffbs-label">Нарх барои як соат (сомонӣ)</span><div class="ffbs-price-inputs"><label><span class="ffbs-help">Аз</span><input class="ffbs-input" type="number" min="0" step="1" name="price_min" placeholder="0"></label><label><span class="ffbs-help">То</span><input class="ffbs-input" type="number" min="0" step="1" name="price_max" placeholder="500"></label></div></div>
+          <label class="ffbs-filter-field"><span class="ffbs-label">Ҷобаҷогузорӣ</span><select class="ffbs-select" name="sort"><option value="recommended">Тавсияшаванда</option><option value="price_asc">Нарх: арзон аввал</option><option value="price_desc">Нарх: гарон аввал</option><option value="name_asc">Аз рӯйи ном</option></select></label>
+          <input type="hidden" name="page" value="1"><input type="hidden" name="per_page" value="12">
+          <button class="ffbs-button ffbs-button--full" type="submit">Натиҷаҳоро нишон додан</button>
+        </form>
+      </aside>
+      <section class="ffbs-catalog-results" aria-labelledby="results-title">
+        <div class="ffbs-results-head"><div><h2 id="results-title">Натиҷаҳои ҷустуҷӯ</h2><p id="catalog-status" class="ffbs-search-status" aria-live="polite">Рӯйхати майдончаҳо</p></div><span class="ffbs-results-icon" aria-hidden="true">⚽</span></div>
+        <div id="catalog-results" class="ffbs-field-grid ffbs-field-grid--catalog" aria-live="polite">
+          <a class="ffbs-field-card" href="field.html?id=1"><div class="ffbs-field-card__image"><span class="ffbs-field-card__image-mark">⚽</span></div><div class="ffbs-field-card__body"><h3 class="ffbs-field-card__title">Арена Меркурий</h3><p class="ffbs-field-card__meta">Хуҷанд · 08:00–23:00</p><div class="ffbs-field-card__tags"><span class="ffbs-tag">5 × 5</span><span class="ffbs-tag">Алафи сунъӣ</span></div><div class="ffbs-field-card__footer"><span class="ffbs-price">аз 80 сомонӣ / соат</span><span class="ffbs-card-cta">Интихоб →</span></div></div></a>
+          <a class="ffbs-field-card" href="field.html?id=2"><div class="ffbs-field-card__image ffbs-field-card__image--alt"><span class="ffbs-field-card__image-mark">⚽</span></div><div class="ffbs-field-card__body"><h3 class="ffbs-field-card__title">Арена Олимп</h3><p class="ffbs-field-card__meta">Хуҷанд · 08:00–23:00</p><div class="ffbs-field-card__tags"><span class="ffbs-tag">7 × 7</span><span class="ffbs-tag">Алафи сунъӣ</span></div><div class="ffbs-field-card__footer"><span class="ffbs-price">аз 110 сомонӣ / соат</span><span class="ffbs-card-cta">Интихоб →</span></div></div></a>
+          <a class="ffbs-field-card" href="field.html?id=3"><div class="ffbs-field-card__image ffbs-field-card__image--night"><span class="ffbs-field-card__image-mark">⚽</span></div><div class="ffbs-field-card__body"><h3 class="ffbs-field-card__title">Стадион Хуҷанд</h3><p class="ffbs-field-card__meta">Хуҷанд · 09:00–22:00</p><div class="ffbs-field-card__tags"><span class="ffbs-tag">11 × 11</span><span class="ffbs-tag">Алафи табиӣ</span></div><div class="ffbs-field-card__footer"><span class="ffbs-price">аз 250 сомонӣ / соат</span><span class="ffbs-card-cta">Интихоб →</span></div></div></a>
+        </div>
+        <p class="ffbs-demo-note">Агар API дастрас набошад, ин саҳифа маълумоти намунавиро нишон медиҳад. Ин маълумот бронкунии воқеӣ намесозад.</p>
+      </section>
+    </div>
+  </main>
+  <footer class="ffbs-footer"><div class="ffbs-container ffbs-footer__inner"><a class="ffbs-brand" href="index.html"><span class="ffbs-brand__mark">F</span><span>FFBS</span></a><p>Football Field Booking System · Хуҷанд, Тоҷикистон</p><span>© 2026 FFBS</span></div></footer>
+  <script src="../assets/js/static.js" defer></script>
+</body>
+</html>
