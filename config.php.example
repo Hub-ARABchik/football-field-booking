@@ -1,0 +1,163 @@
+<?php
+
+declare(strict_types=1);
+
+/**
+ * Compatibility bootstrap for the legacy PHP pages and API endpoints.
+ * Copy to /config.php. Credentials are read from the private config/config.php.
+ */
+$configFile = __DIR__ . '/config/config.php';
+if (!is_file($configFile)) {
+    http_response_code(503);
+    exit('FFBS configuration is missing.');
+}
+$config = require $configFile;
+if (!is_array($config) || !isset($config['db'])) {
+    http_response_code(503);
+    exit('FFBS configuration is invalid.');
+}
+
+$GLOBALS['ffbs_config'] = $config;
+date_default_timezone_set((string) ($config['app']['timezone'] ?? 'Asia/Dushanbe'));
+
+$basePath = (string) ($config['app']['base_path'] ?? '');
+if (!defined('BASE')) define('BASE', $basePath);
+if (!defined('CURRENCY')) define('CURRENCY', (string) ($config['app']['currency'] ?? 'сом.'));
+
+$db = $config['db'];
+if (($db['driver'] ?? 'mysql') !== 'mysql' || str_contains((string) ($db['host'] ?? ''), 'YOUR_INFINITYFREE_') || str_contains((string) ($db['database'] ?? ''), 'YOUR_INFINITYFREE_') || str_contains((string) ($db['user'] ?? ''), 'YOUR_INFINITYFREE_') || ($db['pass'] ?? '') === '') {
+    http_response_code(503);
+    exit('FFBS database settings have not been completed.');
+}
+
+$dsn = sprintf('mysql:host=%s;port=%d;dbname=%s;charset=utf8mb4', $db['host'], (int) ($db['port'] ?? 3306), $db['database']);
+try {
+    $pdo = new PDO($dsn, (string) $db['user'], (string) $db['pass'], [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+        PDO::ATTR_EMULATE_PREPARES => false,
+    ]);
+} catch (PDOException $exception) {
+    error_log('FFBS legacy database connection failed: ' . $exception->getMessage());
+    http_response_code(503);
+    exit('Database connection is unavailable.');
+}
+
+$security = $config['security'] ?? [];
+session_name((string) ($security['session_name'] ?? 'FFBSSESSID'));
+session_set_cookie_params([
+    'lifetime' => (int) ($security['session_lifetime'] ?? 0),
+    'path' => $basePath !== '' ? $basePath : '/',
+    'secure' => (bool) ($security['session_secure'] ?? true),
+    'httponly' => true,
+    'samesite' => (string) ($security['session_samesite'] ?? 'Lax'),
+]);
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
+
+function e(mixed $value): string
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
+function money(mixed $amount): string
+{
+    return number_format((float) $amount, 2, '.', ' ') . ' ' . CURRENCY;
+}
+
+function go(string $path): never
+{
+    if ($path === '' || $path[0] !== '/' || str_starts_with($path, '//')) {
+        $path = '/';
+    }
+    header('Location: ' . BASE . $path, true, 302);
+    exit;
+}
+
+function load_prices(PDO $pdo, int $fieldId): array
+{
+    $stmt = $pdo->prepare('SELECT day_type, time_of_day, price FROM prices WHERE field_id = :field_id');
+    $stmt->execute(['field_id' => $fieldId]);
+    $result = [];
+    foreach ($stmt->fetchAll() as $row) {
+        $result[$row['day_type']][$row['time_of_day']] = (float) $row['price'];
+    }
+    return $result;
+}
+
+function price_calc(array $prices, string $date, int $hour, string $eveningFrom): float
+{
+    $timestamp = strtotime($date . ' 12:00:00');
+    $dayType = $timestamp !== false && (int) date('N', $timestamp) >= 6 ? 'weekend' : 'weekday';
+    $timeType = $hour >= (int) substr($eveningFrom, 0, 2) ? 'evening' : 'day';
+    return (float) ($prices[$dayType][$timeType] ?? 0);
+}
+
+function user(): ?array
+{
+    global $pdo;
+    static $loaded = false;
+    static $current = null;
+    if ($loaded) return $current;
+    $loaded = true;
+    $id = filter_var($_SESSION['uid'] ?? null, FILTER_VALIDATE_INT);
+    if (!$id || $id < 1) return null;
+    $stmt = $pdo->prepare("SELECT id, full_name, phone, email, role FROM users WHERE id = :id LIMIT 1");
+    $stmt->execute(['id' => $id]);
+    $current = $stmt->fetch() ?: null;
+    return $current;
+}
+
+function require_login(): void
+{
+    if (!user()) go('/login.php');
+}
+
+function require_admin(): void
+{
+    $current = user();
+    if (!$current) go('/login.php');
+    if ($current['role'] !== 'ADMIN') {
+        http_response_code(403);
+        exit('403 Forbidden');
+    }
+}
+
+function require_owner(): void
+{
+    $current = user();
+    if (!$current) go('/login.php');
+    if (!in_array($current['role'], ['OWNER', 'ADMIN'], true)) {
+        http_response_code(403);
+        exit('403 Forbidden');
+    }
+}
+
+function csrf_token(): string
+{
+    if (empty($_SESSION['_csrf'])) $_SESSION['_csrf'] = bin2hex(random_bytes(32));
+    return (string) $_SESSION['_csrf'];
+}
+
+function csrf_check(): void
+{
+    $provided = (string) ($_POST['csrf_token'] ?? $_SERVER['HTTP_X_CSRF_TOKEN'] ?? '');
+    $known = (string) ($_SESSION['_csrf'] ?? '');
+    if ($known === '' || $provided === '' || !hash_equals($known, $provided)) {
+        http_response_code(419);
+        exit('419 CSRF token mismatch');
+    }
+}
+
+$DAYS = ['Душанбе', 'Сешанбе', 'Чоршанбе', 'Панҷшанбе', 'Ҷумъа', 'Шанбе', 'Якшанбе'];
+$MONTHS = ['Январ', 'Феврал', 'Март', 'Апрел', 'Май', 'Июн', 'Июл', 'Август', 'Сентябр', 'Октябр', 'Ноябр', 'Декабр'];
+$STATUS = [
+    'pending' => 'Дар интизорӣ',
+    'confirmed' => 'Тасдиқшуда',
+    'cancelled' => 'Бекоршуда',
+    'completed' => 'Анҷомёфта',
+    'draft' => 'Лоиҳа',
+    'approved' => 'Тасдиқшуда',
+    'rejected' => 'Радшуда',
+    'suspended' => 'Боздошта',
+];
+$u = user();
