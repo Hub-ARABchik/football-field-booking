@@ -1,0 +1,109 @@
+# FFBS — рӯйхати масирҳо ва натиҷаҳои интизоршаванда
+# Нуқтаи нави API: /api/v2 (PHP Router + PDO + MySQL)
+# Минтақаи вақт: Asia/Dushanbe
+# Ин файл ҳуҷҷати масирҳост; кодҳои HTTP-и воқеӣ бояд бо curl санҷида шаванд.
+
+## 1. Масирҳои ҷамъиятӣ
+
+GET /api/v2/fields
+  200 OK — каталоги майдончаҳои тасдиқшуда; филтрҳо: q, city, size, surface,
+           price_min, price_max, sort, page, per_page.
+  422 Unprocessable Content — диапазони нарх ё филтри нодуруст.
+
+GET /api/v2/fields/{id}
+  200 OK — маълумоти майдонча, аксҳо, тарифҳо ва ҷадвали ҳафтаина.
+  404 Not Found — майдонча вуҷуд надорад ё тасдиқ нашудааст.
+
+GET /api/v2/fields/{id}/availability?week=0
+  200 OK — соатҳои холӣ, банд ва гузашта дар ҳафтаи интихобшуда.
+  404 Not Found — майдонча ёфт нашуд.
+  422 Unprocessable Content — week берун аз диапазони 0..8.
+
+## 2. Аутентификатсия ва сессия
+
+GET /api/v2/auth/me
+  200 OK — корбари фаъол ё null; ҳамеша csrf_token медиҳад.
+
+POST /api/v2/auth/register
+  201 Created — ҳисоби CUSTOMER ё OWNER сохта шуд (account_type; ADMIN аз бақайдгирии оммавӣ иҷозат надорад).
+  409 Conflict — телефон ё email аллакай истифода мешавад.
+  419 — CSRF token нест ё нодуруст аст.
+  422 — маълумоти бақайдгирӣ нодуруст аст.
+
+POST /api/v2/auth/login
+  200 OK — воридшавӣ ва навсозии session ID.
+  401 Unauthorized — маълумоти воридшавӣ нодуруст аст.
+  419 — CSRF token нодуруст аст.
+
+POST /api/v2/auth/logout
+  200 OK — сессия анҷом ёфт.
+  401 Unauthorized — сессияи фаъол вуҷуд надорад.
+  419 — CSRF token нодуруст аст.
+
+## 3. Бронкунии муштарӣ (CUSTOMER)
+
+GET /api/v2/bookings
+  200 OK — танҳо бронҳои корбари воридшуда.
+  401 Unauthorized — воридшавӣ талаб мешавад.
+  403 Forbidden — нақши корбар CUSTOMER нест.
+
+POST /api/v2/bookings
+  201 Created — брон дар транзаксия сохта шуда, пардохти pending сабт шуд.
+  401/403 — сессия ё нақш нодуруст аст.
+  409 Conflict — соат аллакай банд аст ё тариф танзим нашудааст.
+  419 — CSRF token нодуруст аст.
+  422 — сана, вақт, давомнокӣ ё вақти корӣ нодуруст аст.
+
+POST /api/v2/bookings/{id}/cancel
+  200 OK — брон бекор шуд; сабти аудит нигоҳ дошта шуд.
+  404 Not Found — брон ба ин корбар тааллуқ надорад ё ёфт нашуд.
+  409 Conflict — брон бекоршаванда нест ё муҳлати иҷозат гузаштааст.
+  419 — CSRF token нодуруст аст.
+
+## 4. Кабинети соҳиб (OWNER)
+
+GET /api/v2/owner/dashboard
+  200 OK — шумораи майдончаҳо, бронҳо ва дархостҳои интизорӣ.
+  401/403 — сессия ё нақш нодуруст аст.
+
+GET /api/v2/owner/fields
+  200 OK — танҳо майдончаҳои owner_id-и корбари ҷорӣ.
+
+POST /api/v2/owner/fields
+  201 Created — майдонча бо status=pending сохта шуд ва мунтазири тасдиқ аст.
+  419/422 — CSRF ё маълумоти шакл нодуруст аст.
+
+GET /api/v2/owner/bookings
+  200 OK — бронҳои майдончаҳои соҳиби ҷорӣ.
+
+POST /api/v2/owner/bookings/{id}/confirm
+  200 OK — брон аз pending ба confirmed гузашт.
+  409 Conflict — брон ба ин соҳиб тааллуқ надорад ё дигар pending нест.
+  419 — CSRF token нодуруст аст.
+
+## 5. Администратор (ADMIN)
+
+POST /api/v2/admin/payments/{id}/status
+  200 OK — пардохти pending ҳамчун confirmed ё rejected қайд шуд.
+  404 Not Found — пардохт вуҷуд надорад.
+  409 Conflict — пардохт дигар pending нест.
+  419/422 — CSRF ё status нодуруст аст.
+
+POST /api/v2/admin/fields/{id}/moderate
+  200 OK — майдонча аз ҷониби ADMIN тасдиқ, рад ё боздошта шуд.
+  419/422 — CSRF ё status нодуруст аст.
+
+GET /api/v2/admin/dashboard
+  200 OK — ҳисоботи умумии корбарон, майдончаҳо, бронҳо ва пардохтҳо.
+
+GET /api/v2/admin/reports/bookings
+  200 OK — ҷамъбасти моҳонаи бронҳо ва маблағи умумӣ.
+
+Барои ADMIN-и нодуруст ё корбари дигар ҳамаи масирҳои боло бояд 403 Forbidden баргардонанд.
+
+## 6. Масирҳои кӯҳна, ки нигоҳ дошта мешаванд
+
+GET /api/fields/ — API-и ҷории каталоги майдончаҳо.
+GET /api/availability/?field_id={id}&week={0..8} — API-и ҷории дастрасӣ.
+
+Масирҳои кӯҳна бо сабаби мутобиқат нигоҳ дошта шудаанд. API-и нав дар `/api/v2/` ҷойгир аст ва ба онҳо халал намерасонад.
