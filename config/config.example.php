@@ -27,11 +27,11 @@ return [
 
     'db' => [
         'driver' => 'mysql',
-        'host' => (string) $env('DB_HOST', 'YOUR_INFINITYFREE_MYSQL_HOST'),
+        'host' => (string) $env('DB_HOST', 'sql300.infinityfree.com'),
         'port' => (int) $env('DB_PORT', 3306),
-        'database' => (string) $env('DB_NAME', 'YOUR_INFINITYFREE_DATABASE_NAME'),
-        'user' => (string) $env('DB_USER', 'YOUR_INFINITYFREE_DATABASE_USERNAME'),
-        'pass' => (string) $env('DB_PASS', 'YOUR_INFINITYFREE_DATABASE_PASSWORD'),
+        'database' => (string) $env('DB_NAME', 'football-booking'),
+        'user' => (string) $env('DB_USER', 'if0_43450886'),
+        'pass' => (string) $env('DB_PASS', ''),
         'charset' => 'utf8mb4',
     ],
 
