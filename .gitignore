@@ -1,0 +1,21 @@
+# Private application configuration and environment files
+/config/config.php
+/config.php
+/.env
+/.env.*
+!/.env.example
+
+# Runtime data
+/uploads/*
+!/uploads/.gitkeep
+/storage/*
+!/storage/.gitkeep
+*.log
+
+# Local tooling
+/.phpunit.cache/
+/vendor/
+/.idea/
+/.vscode/
+.DS_Store
+Thumbs.db
